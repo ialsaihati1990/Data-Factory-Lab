@@ -1,7 +1,7 @@
 # NovaTel Performance Optimization Lab
 
-**Data Factory & Digital Analytics for Enterprise · Day 3: Performance Optimization & Scalability**
-Hands-on activity · 20–25 minutes · mixed technical backgrounds
+**Data Factory & Digital Analytics for Enterprise - Performance Optimization & Scalability**
+Hands-on activity · 1 h · mixed technical backgrounds
 
 Participants run a real benchmark in Python, interpret the results, and submit an evidence-based recommendation. Every performance number comes from the participant's own runtime. Nothing is hard-coded.
 
