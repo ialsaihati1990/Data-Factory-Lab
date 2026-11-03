@@ -1,0 +1,1033 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>NovaTel Performance Command Center</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=IBM+Plex+Sans+Arabic:wght@400;600&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#060D20; --bg2:#0A1430; --panel:#0E1A3A; --panel2:#122248; --line:#1F3161; --line2:#2A4080;
+  --text:#E8EEFF; --muted:#8EA2CF; --dim:#5D719E;
+  --blue:#3B82F6; --cyan:#22D3EE; --purple:#A78BFA; --violet:#7C3AED;
+  --ok:#34D399; --warn:#FBBF24; --bad:#F87171;
+  --radius:14px; --mono:"JetBrains Mono",ui-monospace,Consolas,monospace;
+}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+html,body{margin:0;background:var(--bg);color:var(--text);font-family:Inter,"Segoe UI",Roboto,Arial,sans-serif;font-size:14px;line-height:1.5}
+body{background:radial-gradient(1200px 600px at 85% -10%,rgba(124,58,237,.16),transparent 60%),radial-gradient(900px 500px at -10% 10%,rgba(34,211,238,.08),transparent 60%),var(--bg);min-height:100vh}
+button,input,select,textarea{font:inherit;color:inherit}
+a{color:var(--cyan)}
+.ar{font-family:"IBM Plex Sans Arabic",Tahoma,sans-serif;direction:rtl;text-align:right;color:var(--muted);font-size:13.5px}
+.mono{font-family:var(--mono)}
+svg.i{width:18px;height:18px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;flex:none}
+
+/* ---------- top bar */
+.top{position:sticky;top:0;z-index:20;display:flex;align-items:center;gap:16px;padding:12px 22px;background:rgba(6,13,32,.85);backdrop-filter:blur(10px);border-bottom:1px solid var(--line)}
+.brand{display:flex;align-items:center;gap:10px}
+.brand b{letter-spacing:4px;font-size:15px}
+.brand small{display:block;color:var(--muted);font-size:11.5px;letter-spacing:.3px}
+.top .sp{flex:1}
+.chip{display:inline-flex;align-items:center;gap:6px;padding:5px 11px;border:1px solid var(--line);border-radius:999px;background:var(--panel);font-size:12.5px;color:var(--muted)}
+.chip b{color:var(--text)}
+.score{display:flex;align-items:center;gap:10px}
+.ring{width:46px;height:46px}
+.ring circle{fill:none;stroke-width:5}
+.lvl{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:1px}
+.lvl b{display:block;color:var(--text);font-size:13px;letter-spacing:.2px;text-transform:none}
+
+/* ---------- layout */
+.wrap{display:grid;grid-template-columns:260px 1fr;gap:22px;max-width:1360px;margin:0 auto;padding:22px}
+nav.side{position:sticky;top:92px;align-self:start;background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:14px}
+.side h4{margin:2px 6px 10px;font-size:11px;color:var(--muted);letter-spacing:1.4px;text-transform:uppercase}
+.step{display:flex;align-items:center;gap:10px;width:100%;padding:10px;border:1px solid transparent;border-radius:10px;background:none;cursor:pointer;text-align:left;transition:.2s}
+.step:hover:not(:disabled){background:var(--panel2)}
+.step.on{background:linear-gradient(90deg,rgba(59,130,246,.18),rgba(34,211,238,.05));border-color:var(--line2)}
+.step:disabled{cursor:not-allowed;opacity:.45}
+.step .n{width:30px;height:30px;border-radius:9px;display:grid;place-items:center;font-weight:700;font-size:12px;background:var(--bg2);border:1px solid var(--line);color:var(--muted)}
+.step.done .n{background:rgba(52,211,153,.15);border-color:rgba(52,211,153,.5);color:var(--ok)}
+.step.on .n{border-color:var(--cyan);color:var(--cyan)}
+.step .t{font-size:13px;font-weight:600}
+.step .t small{display:block;font-weight:400;color:var(--muted);font-size:11.5px}
+.prog{margin:14px 6px 4px}
+.prog .bar{height:6px;border-radius:9px;background:var(--bg2);overflow:hidden}
+.prog .bar i{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--blue),var(--cyan));transition:width .6s ease}
+.prog small{color:var(--muted);font-size:11.5px}
+.legend{margin:14px 6px 0;padding-top:12px;border-top:1px solid var(--line);font-size:11.5px;color:var(--muted);display:grid;gap:6px}
+
+main{min-width:0}
+section.mission{display:none;animation:fade .35s ease}
+section.mission.on{display:block}
+@keyframes fade{from{opacity:0;transform:translateY(6px)}}
+.mhead{display:flex;align-items:flex-end;justify-content:space-between;gap:16px;margin:2px 0 16px;flex-wrap:wrap}
+.mhead .k{font-size:11.5px;letter-spacing:3px;color:var(--cyan);font-weight:700}
+.mhead h2{margin:4px 0 2px;font-size:24px;letter-spacing:-.2px}
+.mhead p{margin:0;color:var(--muted);max-width:720px}
+
+.panel{background:linear-gradient(180deg,var(--panel),rgba(14,26,58,.75));border:1px solid var(--line);border-radius:var(--radius);padding:18px;margin-bottom:16px}
+.panel h3{margin:0 0 4px;font-size:15px;display:flex;align-items:center;gap:8px}
+.panel .sub{color:var(--muted);font-size:12.5px;margin-bottom:14px}
+.grid{display:grid;gap:12px}
+.g2{grid-template-columns:repeat(2,minmax(0,1fr))}
+.g3{grid-template-columns:repeat(3,minmax(0,1fr))}
+.kpis{display:grid;gap:12px;grid-template-columns:repeat(auto-fit,minmax(150px,1fr))}
+.kpi{background:var(--bg2);border:1px solid var(--line);border-radius:12px;padding:13px 14px;position:relative;overflow:hidden}
+.kpi:before{content:"";position:absolute;inset:0 0 auto 0;height:3px;background:var(--acc,var(--blue))}
+.kpi .l{font-size:10.5px;letter-spacing:1px;text-transform:uppercase;color:var(--muted)}
+.kpi .v{font-size:24px;font-weight:800;margin-top:4px;font-variant-numeric:tabular-nums;letter-spacing:-.3px}
+.kpi .s{font-size:11.5px;color:var(--muted)}
+.tag{display:inline-flex;align-items:center;gap:4px;font-size:10px;font-weight:800;letter-spacing:1.2px;padding:2px 8px;border-radius:999px;vertical-align:middle}
+.tag.meas{background:rgba(34,211,238,.12);color:var(--cyan);border:1px solid rgba(34,211,238,.4)}
+.tag.hypo{background:rgba(251,191,36,.12);color:var(--warn);border:1px dashed rgba(251,191,36,.6)}
+.tag.ok{background:rgba(52,211,153,.12);color:var(--ok);border:1px solid rgba(52,211,153,.4)}
+.tag.bad{background:rgba(248,113,113,.12);color:var(--bad);border:1px solid rgba(248,113,113,.4)}
+
+.note{border-radius:10px;padding:10px 13px;font-size:13px;margin:10px 0;display:flex;gap:10px;align-items:flex-start}
+.note.warn{background:rgba(251,191,36,.08);border:1px solid rgba(251,191,36,.4)}
+.note.info{background:rgba(59,130,246,.08);border:1px solid rgba(59,130,246,.4)}
+.note.good{background:rgba(52,211,153,.08);border:1px solid rgba(52,211,153,.4)}
+.note.bad{background:rgba(248,113,113,.08);border:1px solid rgba(248,113,113,.4)}
+.note svg{margin-top:2px}
+
+.btn{display:inline-flex;align-items:center;gap:8px;padding:9px 15px;border-radius:10px;border:1px solid var(--line2);background:var(--panel2);cursor:pointer;font-weight:600;font-size:13px;transition:.15s}
+.btn:hover:not(:disabled){border-color:var(--cyan)}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+.btn.pri{background:linear-gradient(90deg,var(--blue),var(--cyan));border:0;color:#03122C}
+.btn.ghost{background:none}
+.btn.sm{padding:6px 11px;font-size:12px}
+.row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.right{margin-left:auto}
+
+/* import */
+.drop{border:1.5px dashed var(--line2);border-radius:14px;padding:26px;text-align:center;background:rgba(10,20,48,.6);transition:.2s}
+.drop.over{border-color:var(--cyan);background:rgba(34,211,238,.06)}
+.drop h3{justify-content:center}
+.steps3{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:16px}
+.s3{background:var(--bg2);border:1px solid var(--line);border-radius:12px;padding:14px}
+.s3 .num{font-size:11px;color:var(--cyan);font-weight:800;letter-spacing:2px}
+.s3 b{display:block;margin:4px 0 2px}
+.s3 p{margin:0;color:var(--muted);font-size:12.5px}
+label.f{display:block;font-size:11.5px;color:var(--muted);letter-spacing:.6px;text-transform:uppercase;margin:0 0 5px}
+input[type=text],select,textarea{width:100%;background:var(--bg2);border:1px solid var(--line);border-radius:10px;padding:9px 11px;outline:none}
+input[type=text]:focus,select:focus,textarea:focus{border-color:var(--cyan)}
+textarea{min-height:76px;resize:vertical}
+details{background:var(--bg2);border:1px solid var(--line);border-radius:10px;padding:10px 13px;margin-top:10px}
+details summary{cursor:pointer;color:var(--muted);font-size:13px}
+pre{font-family:var(--mono);font-size:12px;background:#050B1C;border:1px solid var(--line);border-radius:9px;padding:11px;overflow:auto;color:#CFE3FF;margin:8px 0 0}
+
+/* bars */
+.hb{display:grid;grid-template-columns:110px 1fr 70px;gap:10px;align-items:center;font-size:12.5px;margin:7px 0}
+.hb .tr{height:10px;background:var(--bg2);border-radius:9px;overflow:hidden}
+.hb .tr i{display:block;height:100%;border-radius:9px;width:0;transition:width 1s cubic-bezier(.2,.8,.2,1)}
+.hb span:last-child{text-align:right;color:var(--muted);font-variant-numeric:tabular-nums}
+.checks{display:grid;gap:7px}
+.check{display:flex;align-items:center;gap:9px;font-size:13px;padding:8px 10px;background:var(--bg2);border:1px solid var(--line);border-radius:9px}
+.check .r{margin-left:auto;color:var(--muted);font-family:var(--mono);font-size:12px}
+
+/* race */
+.lane{margin:12px 0 16px}
+.lane .lh{display:flex;justify-content:space-between;font-size:13px;margin-bottom:6px}
+.lane .tk{height:34px;background:var(--bg2);border:1px solid var(--line);border-radius:10px;overflow:hidden;position:relative}
+.lane .fl{position:absolute;inset:0 auto 0 0;width:0;border-radius:9px}
+.lane .fl.a{background:linear-gradient(90deg,#5B3FD1,var(--purple))}
+.lane .fl.b{background:linear-gradient(90deg,var(--blue),var(--cyan))}
+.lane .fl.run{animation:race var(--d) linear forwards}
+.lane .done{position:absolute;right:10px;top:7px;font-size:12px;font-weight:700;opacity:0;transition:opacity .3s}
+@keyframes race{to{width:100%}}
+.big{font-size:40px;font-weight:800;letter-spacing:-1px;background:linear-gradient(90deg,var(--cyan),var(--purple));-webkit-background-clip:text;background-clip:text;color:transparent}
+
+/* charts */
+.chart{width:100%;height:auto;display:block}
+.chart text{fill:var(--muted);font-size:11px;font-family:Inter,Arial,sans-serif}
+.chart .gl{stroke:var(--line);stroke-width:1}
+.chart .ttl{fill:var(--text);font-size:12.5px;font-weight:700}
+table.t{width:100%;border-collapse:collapse;font-size:12.5px}
+table.t th{text-align:left;color:var(--muted);font-weight:600;font-size:11px;letter-spacing:.6px;text-transform:uppercase;padding:8px;border-bottom:1px solid var(--line)}
+table.t td{padding:8px;border-bottom:1px solid rgba(31,49,97,.6);font-variant-numeric:tabular-nums}
+.tblwrap{overflow-x:auto}
+
+/* questions */
+.q{background:var(--bg2);border:1px solid var(--line);border-radius:12px;padding:15px;margin-bottom:12px}
+.q .qh{display:flex;justify-content:space-between;gap:10px;align-items:flex-start}
+.q .qt{font-weight:600;font-size:14px}
+.q .pts{flex:none;font-size:11.5px;color:var(--muted);border:1px solid var(--line);border-radius:999px;padding:2px 9px;white-space:nowrap}
+.q .pts.got{color:var(--ok);border-color:rgba(52,211,153,.5)}
+.opts{display:grid;gap:8px;margin:12px 0}
+.opt{display:flex;gap:10px;align-items:flex-start;text-align:left;padding:10px 12px;border-radius:10px;border:1px solid var(--line);background:var(--panel);cursor:pointer;transition:.15s;width:100%}
+.opt:hover:not(:disabled){border-color:var(--line2)}
+.opt .lt{flex:none;width:24px;height:24px;border-radius:7px;display:grid;place-items:center;font-size:12px;font-weight:700;background:var(--bg2);border:1px solid var(--line)}
+.opt.sel{border-color:var(--cyan);background:rgba(34,211,238,.06)}
+.opt.sel .lt{border-color:var(--cyan);color:var(--cyan)}
+.opt.right{border-color:var(--ok);background:rgba(52,211,153,.08)}
+.opt.wrong{border-color:rgba(248,113,113,.6)}
+.opt:disabled{cursor:default}
+.scenario{border-left:3px solid var(--purple);padding:12px 16px;background:rgba(167,139,250,.07);border-radius:0 12px 12px 0;font-size:15px;font-style:italic;margin-bottom:14px}
+
+/* mission footer */
+.mfoot{display:flex;align-items:center;gap:12px;margin-top:6px}
+.mfoot .st{color:var(--muted);font-size:12.5px}
+.summary{background:var(--bg2);border:1px solid var(--line2);border-radius:12px;padding:16px;line-height:1.7;font-size:14px}
+.summary b{color:var(--cyan)}
+.cb{display:flex;flex-wrap:wrap;gap:8px}
+.cb label{display:inline-flex;gap:7px;align-items:center;padding:7px 11px;border:1px solid var(--line);border-radius:999px;cursor:pointer;font-size:12.5px;background:var(--bg2)}
+.cb input{accent-color:var(--cyan)}
+.cb label:has(input:checked){border-color:var(--cyan);background:rgba(34,211,238,.08)}
+.rubric{display:grid;gap:6px;font-size:12.5px}
+.rubric div{display:flex;justify-content:space-between;padding:6px 10px;background:var(--bg2);border-radius:8px;border:1px solid var(--line)}
+.toast{position:fixed;bottom:22px;left:50%;transform:translateX(-50%) translateY(30px);background:var(--panel2);border:1px solid var(--line2);padding:10px 16px;border-radius:10px;opacity:0;transition:.3s;z-index:50;font-size:13px}
+.toast.on{opacity:1;transform:translateX(-50%)}
+.locked{text-align:center;padding:40px;color:var(--muted)}
+footer{max-width:1360px;margin:0 auto;padding:0 22px 30px;color:var(--dim);font-size:12px;display:flex;gap:12px;flex-wrap:wrap}
+
+@media (max-width:980px){
+  .wrap{grid-template-columns:1fr;padding:14px}
+  nav.side{position:static;display:flex;overflow-x:auto;gap:6px;padding:8px}
+  nav.side h4,.legend,.prog{display:none}
+  #steps{display:flex;gap:6px}
+  .step{min-width:170px}
+  .g2,.g3,.steps3{grid-template-columns:1fr}
+  .top{flex-wrap:wrap;padding:10px 14px}
+}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+
+<header class="top">
+  <div class="brand">
+    <svg width="34" height="34" viewBox="0 0 34 34" aria-hidden="true"><defs><linearGradient id="lg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#22D3EE"/><stop offset="1" stop-color="#7C3AED"/></linearGradient></defs><rect x="1" y="1" width="32" height="32" rx="9" fill="#0E1A3A" stroke="url(#lg)" stroke-width="1.5"/><path d="M9 24V10l16 14V10" fill="none" stroke="url(#lg)" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    <div><b>NOVATEL</b><small>Performance Command Center · Day 3</small></div>
+  </div>
+  <div class="sp"></div>
+  <span class="chip" id="whoChip"><svg class="i"><use href="#ic-user"/></svg><b id="whoName">Not connected</b></span>
+  <span class="chip" id="srcChip" title="Source of measurements"><svg class="i"><use href="#ic-db"/></svg><span id="srcName">No results imported</span></span>
+  <div class="score" title="Challenge score out of 100">
+    <svg class="ring" viewBox="0 0 46 46"><circle cx="23" cy="23" r="19" stroke="#1F3161"/><circle id="ringArc" cx="23" cy="23" r="19" stroke="url(#lg)" stroke-dasharray="0 120" stroke-linecap="round" transform="rotate(-90 23 23)"/><text x="23" y="27" text-anchor="middle" fill="#E8EEFF" font-size="12" font-weight="800" id="ringTxt">0</text></svg>
+    <div class="lvl">Score / 100<b id="lvlName">Analyst</b></div>
+  </div>
+</header>
+
+<div class="wrap">
+  <nav class="side" id="side" aria-label="Missions">
+    <h4>Mission tracker</h4>
+    <div id="steps"></div>
+    <div class="prog"><div class="bar"><i id="progBar"></i></div><small id="progTxt">0 of 5 missions complete</small></div>
+    <div class="legend">
+      <div><span class="tag meas">MEASURED</span> from your Colab run</div>
+      <div><span class="tag hypo">HYPOTHETICAL</span> illustrative estimate</div>
+      <div>This page does <b>not</b> run Python. It reads the results file your notebook produced.</div>
+    </div>
+  </nav>
+
+  <main id="main">
+    <!-- ================= M0 CONNECT ================= -->
+    <section class="mission" data-m="0">
+      <div class="mhead"><div><div class="k">MISSION 00 · CONNECT</div><h2>Import your measured results</h2>
+        <p>Every number in this command center comes from the benchmark you ran in Colab. Import your results file to unlock the missions.</p>
+        <p class="ar">شغّل الدفتر في Colab، نزّل ملف النتائج (JSON)، ثم استورده هنا لفتح المهام.</p></div></div>
+      <div class="steps3">
+        <div class="s3"><div class="num">STEP 1</div><b>Open the notebook</b><p>Upload <span class="mono">NovaTel_Interactive_Performance_Lab.ipynb</span> to Google Colab (File → Upload notebook).</p></div>
+        <div class="s3"><div class="num">STEP 2</div><b>Run all cells</b><p>Runtime → Run all. Upload the CSV when asked and complete the form in Mission 05.</p></div>
+        <div class="s3"><div class="num">STEP 3</div><b>Import the JSON</b><p>Download <span class="mono">novatel_results_&lt;name&gt;.json</span> and drop it below.</p></div>
+      </div>
+      <div class="panel">
+        <div class="grid g2" style="margin-bottom:14px">
+          <div><label class="f" for="pName">Participant name</label><input type="text" id="pName" placeholder="Your full name" autocomplete="name"></div>
+          <div><label class="f" for="pTeam">Team / department</label><input type="text" id="pTeam" placeholder="Optional"></div>
+        </div>
+        <div class="drop" id="drop">
+          <h3><svg class="i"><use href="#ic-upload"/></svg>Drop your results JSON here</h3>
+          <p style="color:var(--muted);margin:4px 0 14px">or choose the file. A previously exported submission file also restores your progress.</p>
+          <input type="file" id="fileIn" accept=".json,application/json" hidden>
+          <button class="btn pri" id="pickBtn"><svg class="i"><use href="#ic-file"/></svg>Choose results file</button>
+        </div>
+        <details><summary>Can't download files? Paste the JSON text instead</summary>
+          <textarea id="pasteIn" style="margin-top:10px;min-height:110px" class="mono" placeholder='{"schema": "novatel-lab-results/v1", ...}'></textarea>
+          <div class="row" style="margin-top:8px"><button class="btn sm" id="pasteBtn"><svg class="i"><use href="#ic-check"/></svg>Import pasted JSON</button></div>
+        </details>
+        <div id="importMsg"></div>
+      </div>
+      <div class="panel" id="integrityPanel" hidden>
+        <h3><svg class="i"><use href="#ic-shield"/></svg>Evidence integrity check <span class="tag meas">MEASURED</span></h3>
+        <div class="sub">Re-computes your reported values from the raw timings in the file. Hand-edited numbers fail this check.</div>
+        <div class="checks" id="integrityList"></div>
+      </div>
+      <div class="mfoot"><button class="btn pri" data-next="1" id="go1" disabled>Start Mission 01 <svg class="i"><use href="#ic-arrow"/></svg></button><span class="st" id="st0"></span></div>
+    </section>
+
+    <!-- ================= M1 ================= -->
+    <section class="mission" data-m="1">
+      <div class="mhead"><div><div class="k">MISSION 01 · EXPLORE THE DATA</div><h2>Know your data before you optimize it</h2>
+        <p>NovaTel applies a 5% loyalty discount to each billing transaction before reporting. Confirm the input is valid before trusting any benchmark.</p>
+        <p class="ar">لا قيمة للسرعة إذا كانت البيانات أو النتائج غير صحيحة — تحقّق من الجودة أولًا.</p></div></div>
+      <div class="kpis" id="m1kpis"></div>
+      <div class="grid g2" style="margin-top:16px">
+        <div class="panel"><h3><svg class="i"><use href="#ic-map"/></svg>Transactions by region</h3><div class="sub" id="m1rsub"></div><div id="m1regions"></div></div>
+        <div class="panel"><h3><svg class="i"><use href="#ic-layers"/></svg>Transactions by service type</h3><div class="sub">Four service lines</div><div id="m1services"></div></div>
+      </div>
+      <div class="grid g2">
+        <div class="panel"><h3><svg class="i"><use href="#ic-shield"/></svg>Data quality checks <span class="tag meas">MEASURED</span></h3><div class="sub">Computed in your notebook</div><div class="checks" id="m1checks"></div></div>
+        <div class="panel"><h3><svg class="i"><use href="#ic-db"/></svg>Available fields</h3><div class="sub" id="m1fsub"></div><div class="tblwrap"><table class="t" id="m1fields"></table></div></div>
+      </div>
+      <div class="panel"><h3><svg class="i"><use href="#ic-help"/></svg>Knowledge check</h3><div class="sub">Retry as often as you need. First-attempt answers earn full points.</div><div id="m1q"></div></div>
+      <div class="mfoot"><button class="btn pri" data-next="2" id="go2" disabled>Continue to Mission 02 <svg class="i"><use href="#ic-arrow"/></svg></button><span class="st" id="st1"></span></div>
+    </section>
+
+    <!-- ================= M2 ================= -->
+    <section class="mission" data-m="2">
+      <div class="mhead"><div><div class="k">MISSION 02 · PERFORMANCE EXPERIMENT</div><h2>Row-by-row vs vectorized</h2>
+        <p>Both methods compute <span class="mono">revenue × 0.95</span>. Your notebook ran 1 warm-up plus 7 timed repetitions of each and reported the median. Only the computation is timed — not loading, charting or the wider pipeline.</p>
+        <p class="ar">لإعادة القياس: اضغط زر <b>Re-run experiment</b> في الدفتر، ثم نزّل الملف واستورده من جديد.</p></div>
+        <span class="tag meas">MEASURED ON YOUR RUNTIME</span></div>
+      <div class="kpis" id="m2kpis"></div>
+      <div id="m2warn"></div>
+      <div class="grid g2" style="margin-top:6px">
+        <div class="panel">
+          <h3><svg class="i"><use href="#ic-bolt"/></svg>Before vs After</h3>
+          <div class="sub" id="raceSub"></div>
+          <div class="lane"><div class="lh"><span>Method A · Row-by-row (baseline)</span><b id="raceA"></b></div><div class="tk"><div class="fl a" id="flA"></div><span class="done" id="dnA">done</span></div></div>
+          <div class="lane"><div class="lh"><span>Method B · Vectorized (optimized)</span><b id="raceB"></b></div><div class="tk"><div class="fl b" id="flB"></div><span class="done" id="dnB">done</span></div></div>
+          <div class="row"><div><div class="big" id="raceBig"></div><div style="color:var(--muted);font-size:12px">faster for this computation</div></div><button class="btn sm right" id="replay"><svg class="i"><use href="#ic-refresh"/></svg>Replay</button></div>
+        </div>
+        <div class="panel"><h3><svg class="i"><use href="#ic-chart"/></svg>Every timed repetition</h3><div class="sub">Log scale · each dot is one real timing from your run</div><div id="repChart"></div></div>
+      </div>
+      <details><summary>Inspect the code that was timed</summary>
+<pre># Method A — baseline
+discounted = []
+for value in df['revenue']:
+    discounted.append(value * 0.95)
+
+# Method B — optimized
+vector_result = (df['revenue'] * 0.95).to_numpy()
+
+# Validation
+np.allclose(row_result, vector_result, rtol=1e-12, atol=1e-9)
+
+# Metrics
+speedup        = row_median / vector_median
+time_reduction = (1 - vector_median / row_median) * 100
+throughput     = records / median_seconds</pre></details>
+      <div class="panel" style="margin-top:16px"><h3><svg class="i"><use href="#ic-help"/></svg>Interpret your evidence</h3><div class="sub">Questions use your own measurements.</div><div id="m2q"></div></div>
+      <div class="mfoot"><button class="btn pri" data-next="3" id="go3" disabled>Continue to Mission 03 <svg class="i"><use href="#ic-arrow"/></svg></button><span class="st" id="st2"></span></div>
+    </section>
+
+    <!-- ================= M3 ================= -->
+    <section class="mission" data-m="3">
+      <div class="mhead"><div><div class="k">MISSION 03 · SCALABILITY</div><h2>Does the advantage hold as data grows?</h2>
+        <p>Your notebook ran a genuine benchmark at each size below. To add or refresh a size, use the size selector in notebook Mission 03 and re-import.</p>
+        <p class="ar">الأداء لا يتغيّر خطيًا دائمًا: التكاليف الثابتة والذاكرة والضوضاء تؤثر في النتيجة.</p></div>
+        <span class="tag meas">MEASURED ON YOUR RUNTIME</span></div>
+      <div class="grid g3" id="m3charts"></div>
+      <div class="panel"><h3><svg class="i"><use href="#ic-table"/></svg>Scalability results</h3><div class="sub">Median of 7 runs per size · first <i>n</i> rows of the dataset</div><div class="tblwrap"><table class="t" id="m3table"></table></div>
+        <div class="note info"><svg class="i"><use href="#ic-info"/></svg><div><b>Why it isn't linear.</b> Each call has a fixed cost (dispatch, allocating the output) plus a per-record cost. Fixed cost dominates Method B on small inputs, so speedup usually grows with size and then levels off as memory bandwidth becomes the limit. Sub-millisecond timings are also noisy.</div></div>
+      </div>
+      <div class="panel" style="border-style:dashed;border-color:rgba(251,191,36,.45)">
+        <h3><svg class="i"><use href="#ic-flask"/></svg>Production scenario <span class="tag hypo">HYPOTHETICAL · NOT MEASURED</span></h3>
+        <div class="sub">Linear extrapolation of your measured medians. Excludes I/O, memory pressure, orchestration, network latency and competing workloads.</div>
+        <div class="row" style="margin-bottom:12px"><label class="f" for="nightly" style="margin:0">Nightly transactions</label>
+          <select id="nightly" style="width:auto"><option value="1000000">1,000,000</option><option value="5000000">5,000,000</option><option value="12000000" selected>12,000,000</option><option value="50000000">50,000,000</option></select></div>
+        <div class="kpis" id="m3sim"></div>
+        <div class="note warn"><svg class="i"><use href="#ic-alert"/></svg><div id="m3range"></div></div>
+      </div>
+      <div class="panel"><h3><svg class="i"><use href="#ic-help"/></svg>Scalability reasoning</h3><div class="sub">Interpret the curves, not just the numbers.</div><div id="m3q"></div></div>
+      <div class="mfoot"><button class="btn pri" data-next="4" id="go4" disabled>Continue to Mission 04 <svg class="i"><use href="#ic-arrow"/></svg></button><span class="st" id="st3"></span></div>
+    </section>
+
+    <!-- ================= M4 ================= -->
+    <section class="mission" data-m="4">
+      <div class="mhead"><div><div class="k">MISSION 04 · EXECUTIVE DECISIONS</div><h2>Decide with evidence</h2>
+        <p>Three scenarios. Each tests reasoning about accuracy, risk and cost — use your measurements from Missions 02–03.</p>
+        <p class="ar">اتخذ القرار بناءً على الأدلة التي قستها، مع مراعاة المخاطر والتكلفة والموثوقية.</p></div></div>
+      <div class="scenario">“NovaTel processes millions of telecom billing transactions. Management wants faster analytics without compromising accuracy, reliability, or cost efficiency.”</div>
+      <div class="panel"><div id="m4q"></div></div>
+      <div class="mfoot"><button class="btn pri" data-next="5" id="go5" disabled>Continue to Mission 05 <svg class="i"><use href="#ic-arrow"/></svg></button><span class="st" id="st4"></span></div>
+    </section>
+
+    <!-- ================= M5 ================= -->
+    <section class="mission" data-m="5">
+      <div class="mhead"><div><div class="k">MISSION 05 · EXECUTIVE RECOMMENDATION</div><h2>Write the recommendation</h2>
+        <p>Measured fields are filled from your results and cannot be edited. Add your reasoning, generate the executive summary, then export.</p>
+        <p class="ar">التوصية الجيدة: نتيجة ← دليل ← توصية، مع ذكر خطر واحد واختبار التحقق التالي.</p></div></div>
+      <div class="grid g2">
+        <div class="panel">
+          <h3><svg class="i"><use href="#ic-lock"/></svg>Evidence <span class="tag meas">MEASURED</span></h3>
+          <div class="sub">Locked to your imported results</div>
+          <div class="grid g2" id="m5evidence"></div>
+        </div>
+        <div class="panel">
+          <h3><svg class="i"><use href="#ic-award"/></svg>Recommendation quality rubric</h3>
+          <div class="sub">20 points · updates as you type</div>
+          <div class="rubric" id="rubric"></div>
+        </div>
+      </div>
+      <div class="panel">
+        <div class="grid g2">
+          <div><label class="f" for="fSol">Selected solution</label>
+            <select id="fSol"><option value="">— choose —</option><option value="validated">Vectorized method — adopt after production-scale validation</option><option value="immediate">Vectorized method — deploy immediately</option><option value="reject">Keep row-by-row method</option></select></div>
+          <div><label class="f" for="fTestType">Next validation test</label>
+            <select id="fTestType"><option value="">— choose —</option><option>Production-scale staging run (12M rows)</option><option>Peak-memory profiling under concurrent load</option><option>End-to-end pipeline timing (incl. I/O)</option><option>Regression test of billing totals vs current output</option></select></div>
+        </div>
+        <label class="f" style="margin-top:14px">Operational risks (select all that apply)</label>
+        <div class="cb" id="fRisks"></div>
+        <div class="grid g2" style="margin-top:14px">
+          <div><label class="f" for="fRisk">Operational risk — explain</label><textarea id="fRisk" placeholder="Which risk matters most for NovaTel and why?"></textarea></div>
+          <div><label class="f" for="fTest">Validation test — details</label><textarea id="fTest" placeholder="What exactly will you measure, and what result would make you stop?"></textarea></div>
+        </div>
+        <label class="f" for="fFinal" style="margin-top:14px">Final recommendation</label>
+        <textarea id="fFinal" placeholder="1–2 sentences for the executive team. Cite at least one measured number."></textarea>
+        <div class="row" style="margin-top:14px"><button class="btn pri" id="genBtn"><svg class="i"><use href="#ic-spark"/></svg>Generate executive summary</button><span class="st" id="genMsg" style="color:var(--muted);font-size:12.5px"></span></div>
+      </div>
+      <div class="panel" id="sumPanel" hidden>
+        <h3><svg class="i"><use href="#ic-file"/></svg>Executive summary</h3><div class="sub">Generated from your measurements and reasoning</div>
+        <div class="summary" id="sumText"></div>
+        <div class="row" style="margin-top:14px">
+          <button class="btn pri" id="expJson"><svg class="i"><use href="#ic-download"/></svg>Submission JSON (for trainer)</button>
+          <button class="btn" id="expCsv"><svg class="i"><use href="#ic-table"/></svg>CSV</button>
+          <button class="btn" id="expHtml"><svg class="i"><use href="#ic-file"/></svg>One-page report (HTML)</button>
+          <button class="btn" id="expPrint"><svg class="i"><use href="#ic-print"/></svg>Print / Save as PDF</button>
+        </div>
+      </div>
+      <div class="panel" id="finalPanel" hidden>
+        <h3><svg class="i"><use href="#ic-award"/></svg>Final challenge score</h3><div class="sub">Points reward interpretation, quality checks and decisions — not just running code.</div>
+        <div class="grid g2"><div><div class="big" id="finalScore"></div><div id="finalLevel" style="font-weight:700;font-size:16px"></div><div style="color:var(--muted);font-size:12.5px" id="finalNext"></div></div><div class="rubric" id="breakdown"></div></div>
+      </div>
+    </section>
+  </main>
+</div>
+<footer><span>NovaTel is a fictional training company. Dataset is synthetic.</span><span>·</span><span>Progress is kept in this browser only.</span><span class="right"><button class="btn ghost sm" id="resetBtn"><svg class="i"><use href="#ic-refresh"/></svg>Reset lab</button></span></footer>
+<div class="toast" id="toast"></div>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <symbol id="ic-user" viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21c1.5-4 4.5-6 8-6s6.5 2 8 6"/></symbol>
+  <symbol id="ic-db" viewBox="0 0 24 24"><ellipse cx="12" cy="5" rx="8" ry="3"/><path d="M4 5v14c0 1.7 3.6 3 8 3s8-1.3 8-3V5M4 12c0 1.7 3.6 3 8 3s8-1.3 8-3"/></symbol>
+  <symbol id="ic-upload" viewBox="0 0 24 24"><path d="M12 16V4M7 9l5-5 5 5M4 20h16"/></symbol>
+  <symbol id="ic-download" viewBox="0 0 24 24"><path d="M12 4v12M7 11l5 5 5-5M4 20h16"/></symbol>
+  <symbol id="ic-file" viewBox="0 0 24 24"><path d="M14 3H6v18h12V7z"/><path d="M14 3v4h4M9 13h6M9 17h6"/></symbol>
+  <symbol id="ic-check" viewBox="0 0 24 24"><path d="M5 12l5 5 9-10"/></symbol>
+  <symbol id="ic-x" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></symbol>
+  <symbol id="ic-arrow" viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"/></symbol>
+  <symbol id="ic-shield" viewBox="0 0 24 24"><path d="M12 3l8 3v6c0 5-3.5 8-8 9-4.5-1-8-4-8-9V6z"/><path d="M9 12l2 2 4-4"/></symbol>
+  <symbol id="ic-map" viewBox="0 0 24 24"><path d="M12 21s-7-6.5-7-12a7 7 0 0114 0c0 5.5-7 12-7 12z"/><circle cx="12" cy="9" r="2.5"/></symbol>
+  <symbol id="ic-layers" viewBox="0 0 24 24"><path d="M12 3l9 5-9 5-9-5z"/><path d="M3 13l9 5 9-5"/></symbol>
+  <symbol id="ic-help" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M9.5 9.5a2.5 2.5 0 114 2c-1 .6-1.5 1.2-1.5 2.5M12 17h.01"/></symbol>
+  <symbol id="ic-bolt" viewBox="0 0 24 24"><path d="M13 2L4 14h7l-1 8 9-12h-7z"/></symbol>
+  <symbol id="ic-chart" viewBox="0 0 24 24"><path d="M4 20V4M4 20h16M8 16l4-5 3 3 5-7"/></symbol>
+  <symbol id="ic-table" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 10h18M9 4v16"/></symbol>
+  <symbol id="ic-info" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 11v6M12 7h.01"/></symbol>
+  <symbol id="ic-alert" viewBox="0 0 24 24"><path d="M12 3l10 18H2z"/><path d="M12 10v5M12 18h.01"/></symbol>
+  <symbol id="ic-flask" viewBox="0 0 24 24"><path d="M9 3h6M10 3v6L4 20h16l-6-11V3"/></symbol>
+  <symbol id="ic-lock" viewBox="0 0 24 24"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V8a4 4 0 018 0v3"/></symbol>
+  <symbol id="ic-award" viewBox="0 0 24 24"><circle cx="12" cy="9" r="6"/><path d="M8.5 14L7 22l5-3 5 3-1.5-8"/></symbol>
+  <symbol id="ic-spark" viewBox="0 0 24 24"><path d="M12 3v4M12 17v4M3 12h4M17 12h4M6 6l2.5 2.5M15.5 15.5L18 18M6 18l2.5-2.5M15.5 8.5L18 6"/></symbol>
+  <symbol id="ic-print" viewBox="0 0 24 24"><path d="M7 9V3h10v6"/><rect x="3" y="9" width="18" height="8" rx="2"/><path d="M7 14h10v7H7z"/></symbol>
+  <symbol id="ic-refresh" viewBox="0 0 24 24"><path d="M20 11a8 8 0 10-2.3 5.7M20 4v7h-7"/></symbol>
+  <symbol id="ic-compass" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M15.5 8.5l-2 5-5 2 2-5z"/></symbol>
+</svg>
+
+<script>
+"use strict";
+/* =====================================================================
+   NovaTel Performance Command Center
+   - Reads the results JSON produced by the Colab notebook.
+   - Does NOT execute Python. All measured values come from the file.
+   ===================================================================== */
+const STORE_KEY = "novatel-command-center-v1";
+const SUBMISSION_SCHEMA = "novatel-lab-submission/v1";
+const RESULTS_SCHEMA = "novatel-lab-results/v1";
+const $ = s => document.querySelector(s);
+const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const fin = v => typeof v === "number" && isFinite(v);
+const fmtInt = v => fin(v) ? Math.round(v).toLocaleString("en-US") : "n/a";
+const fmt = (v, d = 1) => fin(v) ? v.toLocaleString("en-US", {minimumFractionDigits: d, maximumFractionDigits: d}) : "n/a";
+const fmtMs = v => !fin(v) ? "n/a" : v < 1 ? v.toFixed(3) + " ms" : v < 100 ? v.toFixed(2) + " ms" : v.toFixed(1) + " ms";
+const fmtSec = v => !fin(v) ? "n/a" : v < 1 ? v.toFixed(3) + " s" : v < 100 ? v.toFixed(2) + " s" : fmtInt(v) + " s";
+const fmtRate = v => !fin(v) ? "n/a" : v >= 1e6 ? fmt(v / 1e6, 1) + "M/s" : fmt(v / 1e3, 0) + "k/s";
+const median = a => { const s = [...a].sort((x, y) => x - y), m = s.length >> 1; return s.length % 2 ? s[m] : (s[m - 1] + s[m]) / 2; };
+const relClose = (a, b, tol = 2e-3) => fin(a) && fin(b) && Math.abs(a - b) <= tol * Math.max(Math.abs(a), Math.abs(b), 1e-9);
+const icon = (id, cls = "") => `<svg class="i ${cls}"><use href="#ic-${id}"/></svg>`;
+const MISSIONS = [
+  {n: "00", t: "Connect", s: "Import results"},
+  {n: "01", t: "Explore the Data", s: "Quality first"},
+  {n: "02", t: "Performance Experiment", s: "A vs B"},
+  {n: "03", t: "Scalability", s: "10k · 50k · 100k"},
+  {n: "04", t: "Executive Decisions", s: "Risk & cost"},
+  {n: "05", t: "Recommendation", s: "Summary & export"},
+];
+const RISK_TAGS = ["Memory pressure at 12M rows", "Data types / nulls in production", "Concurrent jobs on shared nodes",
+  "I/O dominates pipeline runtime", "Hardware differs from test runtime", "Timing noise on short runs"];
+
+let S = blankState();
+function blankState() {
+  return {participant: {name: "", team: ""}, results: null, fileName: "", importedAt: null, integrity: null,
+    answers: {}, rec: {solution: "", testType: "", risks: [], risk: "", test: "", final: ""}, summary: "",
+    summaryAt: null, current: 0};
+}
+function save() { try { localStorage.setItem(STORE_KEY, JSON.stringify(S)); } catch (e) { /* storage unavailable */ } }
+function load() {
+  try { const raw = localStorage.getItem(STORE_KEY); if (raw) S = Object.assign(blankState(), JSON.parse(raw)); }
+  catch (e) { S = blankState(); }
+}
+function toast(msg) { const t = $("#toast"); t.textContent = msg; t.classList.add("on"); clearTimeout(toast._t); toast._t = setTimeout(() => t.classList.remove("on"), 2600); }
+
+/* ---------------------------------------------------------------- questions
+   Built from the participant's own measurements. pts = max points.
+   Scoring: 1st attempt 100%, 2nd 50%, later 25%. Reveal = 0 points. */
+function questions() {
+  const R = S.results; if (!R) return {};
+  const b = R.benchmark, d = R.dataset, sc = R.scalability || [], sim = simulate(12e6);
+  const pass = d.quality_status === "PASS";
+  const tr = b.time_reduction_pct, sp = b.speedup;
+  const total = d.total_revenue;
+  const vMin = Math.min(...b.vector_times_ms), vMax = Math.max(...b.vector_times_ms);
+  const spList = sc.map(r => `${fmtInt(r.records / 1000)}k → ${fmt(r.speedup, 1)}×`).join(", ");
+  return {
+    m1a: {m: 1, pts: 5, text: `Your quality checks report ${d.missing_values_total} missing values, ${d.duplicate_transaction_ids ?? "n/a"} duplicate IDs and revenue stored as ${d.dtypes?.revenue || "numeric"}. What does this allow you to conclude?`,
+      opts: ["The vectorized method will be faster on this dataset.",
+        pass ? "Both methods receive the same valid numeric input, so a timing comparison and a correctness check are meaningful." : "The input is not yet valid — fix the quality issues before trusting any benchmark.",
+        "The dataset is large enough to predict production performance at 12M rows.",
+        "No validation of the output is needed because the input is clean."],
+      correct: 1, why: "Quality checks validate the input, not the speed or the output. Clean input makes a fair comparison possible; you still need the output check (np.allclose).",
+      hint: "Separate what the checks prove (input validity) from what they cannot prove (speed, output correctness, production behaviour)."},
+    m1b: {m: 1, pts: 5, text: `Total revenue in the sample is SAR ${fmt(total, 2)}. After the 5% loyalty discount is applied to every transaction, what should the discounted total be?`,
+      opts: [`SAR ${fmt(total * 0.05, 2)}`, `SAR ${fmt(total - 0.95, 2)}`, `SAR ${fmt(total * 1.05, 2)}`, `SAR ${fmt(total * 0.95, 2)}`],
+      correct: 3, why: "Multiplying each value by 0.95 multiplies the sum by 0.95. This is a quick sanity check you can apply to either method's output.",
+      hint: "The rule is revenue × 0.95 for every row. What happens to the sum?"},
+    m2a: {m: 2, pts: 10, text: `Your run: speedup ${fmt(sp, 1)}×, time reduction ${fmt(tr, 1)}%. Which statement is correct?`,
+      opts: [`The vectorized method is ${fmt(tr, 0)}× faster.`,
+        "The whole nightly billing pipeline will now finish this much faster.",
+        `For this computation, the vectorized method needs about ${fmt(100 - tr, 1)}% of the baseline time.`,
+        "This proves vectorization is the best choice for every workload."],
+      correct: 2, why: "Time reduction is a percentage of baseline time; speedup is a ratio. Both describe this computation only — not loading, I/O or the full pipeline.",
+      hint: "Speedup is a ratio (×). Time reduction is a share of the baseline (%). And what exactly was timed?"},
+    m2b: {m: 2, pts: 10, text: `Across ${b.repeats} repetitions, Method B ranged from ${fmtMs(vMin)} to ${fmtMs(vMax)} (spread ${fmt(b.vector_cv_pct, 0)}%). How should you report the result?`,
+      opts: ["Report the median of the repeated runs, mention the variation, and avoid over-precise claims.",
+        "Report the single fastest run — it shows the true capability.",
+        "Delete the slow runs and recompute the average.",
+        "One run is enough; repetitions only add bias."],
+      correct: 0, why: "Medians are robust to outliers from background activity. Reporting variation is part of honest evidence, especially for sub-millisecond timings.",
+      hint: "Which option is robust to a single unlucky (or lucky) run?"},
+    m3a: {m: 3, pts: 8, text: `Your measured speedups: ${spList}. Why does the speedup change with dataset size?`,
+      opts: ["The CSV file changed between runs.", "Vectorized code becomes less accurate on larger data.",
+        "Python automatically vectorizes loops on small inputs.",
+        "Fixed per-call overhead weighs more on small inputs, so the ratio shifts with size; timing noise matters at sub-millisecond scale."],
+      correct: 3, why: "Cost = fixed part + per-record part. Their balance changes with size, so a ratio measured at one size cannot be assumed at another — including 12M rows.",
+      hint: "Think about the cost of starting an operation versus the cost per record."},
+    m3b: {m: 3, pts: 7, text: `The hypothetical linear estimate for 12M rows is ${fmtSec(sim.row)} → ${fmtSec(sim.vec)}. How should this number be used?`,
+      opts: ["Commit to it as the production SLA.",
+        "As a clearly-labelled illustration that justifies running a production-scale test.",
+        "Multiply it by the 10k speedup to get a more precise forecast.",
+        "Ignore all measurements and rely on the estimate instead."],
+      correct: 1, why: "Extrapolation frames the decision; it is not evidence. It excludes I/O, memory pressure and concurrency — only a production-scale test measures those.",
+      hint: "Is this number measured or estimated?"},
+    m4a: {m: 4, pts: 10, decision: true, text: `Your evidence: ${fmt(sp, 1)}× faster on ${fmtInt(b.records)} records, correctness ${b.correctness.passed ? "PASS" : "FAIL"}. What do you recommend to NovaTel management?`,
+      opts: ["Deploy the optimized method immediately.", "Recommend the optimized method after production-scale validation.",
+        "Reject the optimization because it may increase resource consumption."],
+      correct: 1, why: "Strong, verified evidence for this operation — but measured on a 100k sample in a notebook. Validate at production scale (volume, peak memory, end-to-end time, regression of totals) before rollout.",
+      fb: ["Fast and correct on 100k rows is promising, but nothing has been measured at production volume, memory or concurrency yet.", null,
+        "There is no evidence of higher resource use — and resource use can be measured. Rejecting without measuring discards a verified improvement."]},
+    m4b: {m: 4, pts: 10, text: `Method B builds the full result column in memory: about ${fmt(12e6 * 8 / 1e6, 0)} MB of float64 for 12M rows, plus temporaries, on servers shared with other nightly jobs. What is the most responsible next step?`,
+      opts: ["Ignore memory — vectorization is always more efficient.", "Return to row-by-row because Python loops use less memory.",
+        "Measure peak memory at production scale and, if needed, process in chunks while keeping vectorized operations.",
+        "Double the server RAM before running any test."],
+      correct: 2, why: `Memory is a real but measurable risk; chunking keeps the speed benefit with bounded memory. Note the loop also stores every result as a Python float object (~32 bytes each ≈ ${fmt(12e6 * 32 / 1e6, 0)} MB), so it is not a low-memory option here.`,
+      fb: ["Vectorization trades memory for speed; that trade-off must be measured, not assumed.",
+        "The loop's list of Python float objects is roughly 4× larger than a float64 array.", null,
+        "Spending money before measuring the need is not evidence-based."]},
+    m4c: {m: 4, pts: 10, text: `This discount step is a small part of a 2-hour nightly pipeline dominated by database extraction. Leadership asks whether this optimization alone will substantially cut cloud costs.`,
+      opts: ["Not necessarily: total gain is limited by this step's share of runtime. Measure end-to-end, adopt the low-risk change, and target the real bottleneck next.",
+        `Yes: a ${fmt(sp, 0)}× speedup means the pipeline cost drops ${fmt(sp, 0)}×.`,
+        "No: code optimizations never reduce cost.",
+        "Yes, and regression tests can be skipped because results matched on 100k rows."],
+      correct: 0, why: "Amdahl's law: if a step is 1% of runtime, even an infinitely fast version saves at most 1%. Reliability still needs regression tests.",
+      fb: [null, "Speeding up one step only speeds up the share of time that step takes.",
+        "Optimizations can cut cost — when they target the dominant cost.", "Equivalence on a sample does not remove the need for regression tests in production."]},
+  };
+}
+const QBY = m => Object.entries(questions()).filter(([, q]) => q.m === m).map(([id]) => id);
+const QMULT = [1, 0.5, 0.25];
+
+function answerRec(id) { return S.answers[id] || (S.answers[id] = {attempts: 0, resolved: false, revealed: false, points: 0, first: null, final: null, history: []}); }
+
+function renderQuestions(m, hostSel) {
+  const host = $(hostSel), Q = questions();
+  host.innerHTML = QBY(m).map(id => qHTML(id, Q[id])).join("");
+  host.querySelectorAll(".q").forEach(el => wireQ(el, Q[el.dataset.id]));
+}
+function qHTML(id, q) {
+  const a = S.answers[id] || {attempts: 0};
+  const L = "ABCDEFG";
+  const resolved = a.resolved;
+  return `<div class="q" data-id="${id}">
+    <div class="qh"><div class="qt">${esc(q.text)}</div><span class="pts ${resolved && a.points ? "got" : ""}">${resolved ? `${fmt(a.points, a.points % 1 ? 1 : 0)} / ${q.pts} pts` : `${q.pts} pts`}</span></div>
+    <div class="opts">${q.opts.map((o, i) => `<button class="opt ${resolved && i === q.correct ? "right" : ""}" data-i="${i}" ${resolved ? "disabled" : ""}><span class="lt">${L[i]}</span><span>${esc(o)}</span></button>`).join("")}</div>
+    <div class="row"><button class="btn sm pri qsub" ${resolved ? "hidden" : ""} disabled>${icon("check")}Submit answer</button>
+      <button class="btn sm ghost qrev" ${!resolved && a.attempts >= 2 ? "" : "hidden"}>Show answer (0 pts)</button>
+      <span class="qat" style="color:var(--muted);font-size:12px">${a.attempts ? `Attempts: ${a.attempts}` : ""}</span></div>
+    <div class="qfb">${resolved ? fbHTML(q, a) : ""}</div></div>`;
+}
+function fbHTML(q, a) {
+  return a.revealed
+    ? `<div class="note info">${icon("info")}<div><b>Answer: ${"ABCDEFG"[q.correct]}.</b> ${esc(q.why)}</div></div>`
+    : `<div class="note good">${icon("check")}<div><b>Correct${a.attempts > 1 ? ` on attempt ${a.attempts}` : ""}.</b> ${esc(q.why)}</div></div>`;
+}
+function wireQ(el, q) {
+  const id = el.dataset.id; let sel = null;
+  const sub = el.querySelector(".qsub"), rev = el.querySelector(".qrev"), fb = el.querySelector(".qfb");
+  el.querySelectorAll(".opt").forEach(b => b.addEventListener("click", () => {
+    el.querySelectorAll(".opt").forEach(x => x.classList.remove("sel", "wrong"));
+    b.classList.add("sel"); sel = +b.dataset.i; sub.disabled = false;
+  }));
+  sub.addEventListener("click", () => {
+    if (sel === null) return;
+    const a = answerRec(id); a.attempts++; a.history.push(sel); if (a.first === null) a.first = sel; a.final = sel;
+    if (sel === q.correct) {
+      a.resolved = true; a.points = q.pts * (QMULT[Math.min(a.attempts - 1, 2)]);
+      save(); refresh(); toast(`+${fmt(a.points, a.points % 1 ? 1 : 0)} points`);
+    } else {
+      const opt = el.querySelector(`.opt[data-i="${sel}"]`); opt.classList.add("wrong"); opt.classList.remove("sel");
+      const specific = q.fb && q.fb[sel];
+      fb.innerHTML = `<div class="note bad">${icon("x")}<div><b>Not quite.</b> ${esc(specific || q.hint)} Try again — you can retry as many times as you need.</div></div>`;
+      el.querySelector(".qat").textContent = `Attempts: ${a.attempts}`;
+      if (a.attempts >= 2) rev.hidden = false;
+      sel = null; sub.disabled = true; save(); updateChrome();
+    }
+  });
+  rev.addEventListener("click", () => {
+    const a = answerRec(id); a.resolved = true; a.revealed = true; a.points = 0; save(); refresh();
+  });
+}
+
+/* ---------------------------------------------------------------- import & validation */
+function validateResults(R) {
+  const errs = [];
+  if (!R || typeof R !== "object") return ["File is not a JSON object."];
+  if (R.schema !== RESULTS_SCHEMA) errs.push(`Unexpected schema “${R.schema ?? "missing"}”. Use the JSON produced by NovaTel_Interactive_Performance_Lab.ipynb.`);
+  const b = R.benchmark;
+  if (!b) errs.push("No benchmark found — run notebook Mission 02 before exporting.");
+  else {
+    ["records", "row_median_ms", "vector_median_ms", "speedup", "time_reduction_pct", "row_throughput", "vector_throughput"].forEach(k => { if (!fin(b[k])) errs.push(`benchmark.${k} is missing or not a number.`); });
+    if (!Array.isArray(b.row_times_ms) || !Array.isArray(b.vector_times_ms)) errs.push("Raw repetition timings are missing.");
+    if (!b.correctness) errs.push("Correctness result is missing.");
+  }
+  if (!R.dataset || !fin(R.dataset.rows)) errs.push("Dataset profile missing — run notebook Mission 01.");
+  if (!Array.isArray(R.scalability) || R.scalability.length < 2) errs.push("Scalability results missing — run notebook Mission 03 (at least two sizes).");
+  return errs;
+}
+function integrityChecks(R) {
+  const b = R.benchmark, out = [];
+  const add = (label, ok, detail) => out.push({label, ok, detail});
+  add(`${b.repeats} timed repetitions recorded (≥ 7 required)`, b.repeats >= 7 && b.row_times_ms.length === b.repeats && b.vector_times_ms.length === b.repeats, `${b.row_times_ms.length} + ${b.vector_times_ms.length} timings`);
+  const rm = median(b.row_times_ms), vm = median(b.vector_times_ms);
+  add("Baseline median matches raw timings", relClose(rm, b.row_median_ms), `${fmtMs(rm)} vs ${fmtMs(b.row_median_ms)}`);
+  add("Optimized median matches raw timings", relClose(vm, b.vector_median_ms), `${fmtMs(vm)} vs ${fmtMs(b.vector_median_ms)}`);
+  add("Speedup = baseline ÷ optimized", relClose(b.row_median_ms / b.vector_median_ms, b.speedup), `${fmt(b.row_median_ms / b.vector_median_ms, 2)}× recomputed`);
+  add("Time reduction = (1 − B/A) × 100", relClose((1 - b.vector_median_ms / b.row_median_ms) * 100, b.time_reduction_pct), `${fmt((1 - b.vector_median_ms / b.row_median_ms) * 100, 2)}% recomputed`);
+  add("Throughput = records ÷ time", relClose(b.records / (b.row_median_ms / 1000), b.row_throughput) && relClose(b.records / (b.vector_median_ms / 1000), b.vector_throughput), "both methods");
+  add("Outputs numerically equivalent (np.allclose)", !!b.correctness.passed, `max |A−B| = ${fin(b.correctness.max_abs_diff) ? b.correctness.max_abs_diff.toExponential(1) : "n/a"}`);
+  return {checks: out, passed: out.every(c => c.ok)};
+}
+function importObject(obj, fileName) {
+  let R = obj, restored = false;
+  if (obj && obj.schema === SUBMISSION_SCHEMA) {           // restore a previous submission
+    R = obj.measurements;
+    const errs = validateResults(R);
+    if (errs.length) return showImportErrors(errs);
+    S = Object.assign(blankState(), {participant: obj.participant || {name: "", team: ""}, results: R, fileName,
+      importedAt: new Date().toISOString(), answers: obj.answers_state || {}, rec: Object.assign(blankState().rec, obj.recommendation_state || {}),
+      summary: obj.executive_summary || "", summaryAt: obj.submitted_at || null});
+    restored = true;
+  } else {
+    const errs = validateResults(R);
+    if (errs.length) return showImportErrors(errs);
+    const keepAnswers = S.results && S.results.generated_at && S.participant.name;  // re-import keeps progress
+    S.results = R; S.fileName = fileName; S.importedAt = new Date().toISOString();
+    if (!keepAnswers) { S.answers = {}; S.summary = ""; }
+    if (R.participant?.name && !S.participant.name) S.participant.name = R.participant.name;
+    if (R.participant?.team && !S.participant.team) S.participant.team = R.participant.team;
+    const nr = R.notebook_recommendation;
+    if (nr && !S.rec.final) {
+      S.rec.risk = nr.operational_risk || ""; S.rec.test = nr.next_validation_test || ""; S.rec.final = nr.final_recommendation || "";
+      S.rec.solution = /immediately/i.test(nr.selected_solution || "") ? "immediate" : /row-by-row/i.test(nr.selected_solution || "") ? "reject" : nr.selected_solution ? "validated" : "";
+    }
+  }
+  S.integrity = integrityChecks(S.results);
+  save(); refresh();
+  $("#importMsg").innerHTML = `<div class="note ${S.integrity.passed ? "good" : "warn"}">${icon(S.integrity.passed ? "check" : "alert")}<div><b>${restored ? "Submission restored" : "Results imported"}:</b> ${esc(fileName)} · ${fmtInt(S.results.benchmark.records)} records · measured ${esc((S.results.benchmark.measured_at || "").replace("T", " ").replace("+00:00", " UTC"))}${S.integrity.passed ? "" : " — some integrity checks failed (see below). Re-export from the notebook without editing the file."}</div></div>`;
+  toast(restored ? "Progress restored" : "Results imported");
+}
+function showImportErrors(errs) {
+  $("#importMsg").innerHTML = `<div class="note bad">${icon("x")}<div><b>Could not import this file.</b><ul style="margin:6px 0 0;padding-left:18px">${errs.map(e => `<li>${esc(e)}</li>`).join("")}</ul></div></div>`;
+}
+function readFile(file) {
+  if (!file) return;
+  const r = new FileReader();
+  r.onload = () => { try { importObject(JSON.parse(r.result), file.name); } catch (e) { showImportErrors(["The file is not valid JSON: " + e.message]); } };
+  r.readAsText(file);
+}
+
+/* ---------------------------------------------------------------- simulation (hypothetical) */
+function simulate(rows) {
+  const b = S.results.benchmark, f = rows / b.records;
+  const by = (S.results.scalability || []).map(r => ({n: r.records, row: r.row_median_ms / 1000 * rows / r.records, vec: r.vector_median_ms / 1000 * rows / r.records}));
+  return {row: b.row_median_ms / 1000 * f, vec: b.vector_median_ms / 1000 * f, by};
+}
+
+/* ---------------------------------------------------------------- charts (inline SVG) */
+function lineChart({series, xs, xLabels, log = false, yFmt = v => v, title, yTitle, zero = false, w = 420, h = 250}) {
+  const P = {l: 52, r: 14, t: series.length > 1 ? 46 : 30, b: 34};
+  const all = series.flatMap(s => s.ys).filter(v => fin(v) && (!log || v > 0));
+  let lo = Math.min(...all), hi = Math.max(...all);
+  let ticks;
+  if (log) {
+    lo = Math.pow(10, Math.floor(Math.log10(lo))); hi = Math.pow(10, Math.ceil(Math.log10(hi)));
+    if (hi / lo < 100) { lo /= 1; } ticks = [];
+    for (let e = Math.log10(lo); e <= Math.log10(hi) + 1e-9; e++) ticks.push(Math.pow(10, e));
+  } else {
+    if (zero) lo = 0; const span = (hi - lo) || 1; const step = Math.pow(10, Math.floor(Math.log10(span / 4)));
+    const nice = [1, 2, 5, 10].map(m => m * step).find(s => span / s <= 5) || step * 10;
+    lo = Math.floor(lo / nice) * nice; hi = Math.ceil(hi * 1.12 / nice) * nice; ticks = [];
+    for (let v = lo; v <= hi + 1e-9; v += nice) ticks.push(v);
+  }
+  const X = i => P.l + (xs.length === 1 ? (w - P.l - P.r) / 2 : i * (w - P.l - P.r) / (xs.length - 1));
+  const Y = v => log ? P.t + (Math.log10(hi) - Math.log10(v)) / (Math.log10(hi) - Math.log10(lo)) * (h - P.t - P.b)
+                     : P.t + (hi - v) / (hi - lo) * (h - P.t - P.b);
+  let g = `<text class="ttl" x="${P.l}" y="16">${esc(title)}</text>`;
+  ticks.forEach(t => g += `<line class="gl" x1="${P.l}" x2="${w - P.r}" y1="${Y(t)}" y2="${Y(t)}"/><text x="${P.l - 6}" y="${Y(t) + 4}" text-anchor="end">${esc(yFmt(t))}</text>`);
+  xs.forEach((x, i) => g += `<text x="${X(i)}" y="${h - 12}" text-anchor="middle">${esc(xLabels[i])}</text>`);
+  if (yTitle) g += `<text x="${w - P.r}" y="16" text-anchor="end">${esc(yTitle)}</text>`;
+  series.forEach(s => {
+    const pts = s.ys.map((v, i) => [X(i), Y(v)]);
+    g += `<polyline fill="none" stroke="${s.color}" stroke-width="2.4" stroke-linejoin="round" points="${pts.map(p => p.join(",")).join(" ")}"/>`;
+    pts.forEach((p, i) => g += `<circle cx="${p[0]}" cy="${p[1]}" r="4" fill="${s.color}" stroke="#060D20" stroke-width="2"><title>${esc(s.name)}: ${esc(s.tip ? s.tip(s.ys[i]) : s.ys[i])}</title></circle>`);
+    if (s.labels) pts.forEach((p, i) => g += `<text x="${p[0]}" y="${p[1] - 10}" text-anchor="middle" style="fill:${s.color};font-weight:700">${esc(s.labels[i])}</text>`);
+  });
+  const leg = series.length > 1 ? series.map((s, i) => `<g transform="translate(${P.l + i * 110},24)"><rect width="10" height="10" rx="2" fill="${s.color}"/><text x="15" y="9">${esc(s.name)}</text></g>`).join("") : "";
+  return `<svg class="chart" viewBox="0 0 ${w} ${h}" role="img" aria-label="${esc(title)}">${g}${leg}</svg>`;
+}
+
+/* ---------------------------------------------------------------- mission renderers */
+function renderM1() {
+  const d = S.results.dataset;
+  const regionCount = Object.keys(d.regions || {}).length, svc = Object.keys(d.service_types || {}).length;
+  $("#m1kpis").innerHTML = [
+    ["Total transactions", fmtInt(d.rows), `${d.columns.length} fields`, "var(--blue)"],
+    ["Total revenue", "SAR " + fmt(d.total_revenue / 1e6, 2) + "M", `avg SAR ${fmt(d.revenue_mean, 2)}`, "var(--cyan)"],
+    ["Regions", regionCount, Object.keys(d.regions).join(" · "), "var(--purple)"],
+    ["Service types", svc, Object.keys(d.service_types).join(" · "), "var(--purple)"],
+    ["Data quality", d.quality_status, `${d.missing_values_total} missing · ${d.duplicate_transaction_ids ?? "n/a"} duplicate IDs`, d.quality_status === "PASS" ? "var(--ok)" : "var(--warn)"],
+  ].map(([l, v, s, a]) => `<div class="kpi" style="--acc:${a}"><div class="l">${l}</div><div class="v">${esc(v)}</div><div class="s">${esc(s)}</div></div>`).join("");
+  const bars = (obj, color) => { const max = Math.max(...Object.values(obj)); return Object.entries(obj).sort((a, b) => b[1] - a[1]).map(([k, v]) => `<div class="hb"><span>${esc(k)}</span><div class="tr"><i data-w="${v / max * 100}" style="background:${color}"></i></div><span>${fmtInt(v)}</span></div>`).join(""); };
+  $("#m1regions").innerHTML = bars(d.regions, "linear-gradient(90deg,var(--blue),var(--cyan))");
+  $("#m1services").innerHTML = bars(d.service_types, "linear-gradient(90deg,var(--violet),var(--purple))");
+  $("#m1rsub").textContent = `${d.date_min} → ${d.date_max} · ${fmtInt(d.unique_customers)} customers`;
+  requestAnimationFrame(() => document.querySelectorAll("#m1regions i,#m1services i").forEach(i => i.style.width = i.dataset.w + "%"));
+  $("#m1checks").innerHTML = (d.quality_checks || []).map(c => `<div class="check">${icon(c.pass ? "check" : "alert")}<span>${esc(c.check)}</span><span class="r">${esc(c.result)}</span><span class="tag ${c.pass ? "ok" : "bad"}">${c.pass ? "PASS" : "REVIEW"}</span></div>`).join("");
+  $("#m1fsub").textContent = `${d.columns.length} columns · ${fmtInt(d.rows)} rows · file ${d.file}`;
+  $("#m1fields").innerHTML = `<tr><th>Field</th><th>Type</th><th>Missing</th></tr>` + d.columns.map(c => `<tr><td class="mono">${esc(c)}</td><td>${esc(d.dtypes?.[c])}</td><td>${fmtInt(d.missing_by_column?.[c])}</td></tr>`).join("");
+  renderQuestions(1, "#m1q");
+}
+
+function renderM2() {
+  const b = S.results.benchmark, ok = b.correctness.passed;
+  $("#m2kpis").innerHTML = [
+    ["Baseline time (A)", fmtMs(b.row_median_ms), `median of ${b.repeats} runs`, "var(--purple)"],
+    ["Optimized time (B)", fmtMs(b.vector_median_ms), `median of ${b.repeats} runs`, "var(--cyan)"],
+    ["Speedup factor", fmt(b.speedup, 1) + "×", "A ÷ B", "var(--blue)"],
+    ["Time reduction", fmt(b.time_reduction_pct, 1) + "%", "(1 − B/A) × 100", "var(--blue)"],
+    ["Throughput", fmtRate(b.vector_throughput), `baseline ${fmtRate(b.row_throughput)} · records/s`, "var(--cyan)"],
+    ["Correctness", ok ? "PASS" : "FAIL", `np.allclose · max diff ${fin(b.correctness.max_abs_diff) ? b.correctness.max_abs_diff.toExponential(1) : "n/a"}`, ok ? "var(--ok)" : "var(--bad)"],
+  ].map(([l, v, s, a]) => `<div class="kpi" style="--acc:${a}"><div class="l">${l}</div><div class="v">${esc(v)}</div><div class="s">${esc(s)}</div></div>`).join("");
+  const warns = [];
+  if (Math.max(b.row_cv_pct, b.vector_cv_pct) > 15) warns.push(`<b>Results vary between runs.</b> Spread across repetitions: Method A ${fmt(b.row_cv_pct, 0)}%, Method B ${fmt(b.vector_cv_pct, 0)}%. Background activity on the runtime affects timing — treat the speedup as approximate.`);
+  if (b.vector_median_ms < 1) warns.push(`<b>Very short runtime.</b> Method B took ${fmtMs(b.vector_median_ms)}. At this scale timer resolution and call overhead are a large share of the measurement, so the ratio is sensitive to noise. Warm-up and the 7-run median reduce, but do not remove, this effect.`);
+  const hist = (S.results.benchmark_history || []).map(h => h.speedup).filter(fin);
+  if (hist.length >= 2) {
+    const lo = Math.min(...hist), hi = Math.max(...hist);
+    if ((hi - lo) / lo > 0.25) warns.push(`<b>Your re-runs disagreed.</b> Across ${hist.length} experiment runs the speedup ranged from ${fmt(lo, 1)}× to ${fmt(hi, 1)}×. Report the range or the median — not the best run.`);
+  }
+  const stable = hist.length >= 2 && (Math.max(...hist) - Math.min(...hist)) / Math.min(...hist) <= 0.25
+    ? `<div class="note good">${icon("check")}<div>You ran the experiment ${hist.length} times; speedup stayed between ${fmt(Math.min(...hist), 1)}× and ${fmt(Math.max(...hist), 1)}× — a consistent result.</div></div>` : "";
+  $("#m2warn").innerHTML = warns.map(w => `<div class="note warn">${icon("alert")}<div>${w}</div></div>`).join("") + stable;
+  $("#raceA").textContent = fmtMs(b.row_median_ms); $("#raceB").textContent = fmtMs(b.vector_median_ms);
+  $("#raceBig").textContent = fmt(b.speedup, 1) + "×";
+  $("#raceSub").textContent = `Animation scaled from your medians: Method A plays over 4 s; Method B takes the same proportion of that time (${fmt(4 * b.vector_median_ms / b.row_median_ms, 2)} s).`;
+  race();
+  const xs = b.row_times_ms.map((_, i) => i + 1);
+  $("#repChart").innerHTML = lineChart({xs, xLabels: xs.map(String), log: true, title: `Run-by-run timing · ${fmtInt(b.records)} records`, yTitle: "ms",
+    yFmt: v => v >= 1 ? fmt(v, 0) : v.toPrecision(1),
+    series: [{name: "Row-by-row", color: "#A78BFA", ys: b.row_times_ms, tip: fmtMs}, {name: "Vectorized", color: "#22D3EE", ys: b.vector_times_ms, tip: fmtMs}]});
+  renderQuestions(2, "#m2q");
+}
+function race() {
+  const b = S.results?.benchmark; if (!b) return;
+  const dA = 4, dB = Math.max(4 * b.vector_median_ms / b.row_median_ms, 0.05);
+  [["#flA", "#dnA", dA], ["#flB", "#dnB", dB]].forEach(([f, dn, d]) => {
+    const el = $(f), done = $(dn);
+    el.classList.remove("run"); done.style.opacity = 0; void el.offsetWidth;
+    el.style.setProperty("--d", d + "s"); el.classList.add("run");
+    clearTimeout(el._t); el._t = setTimeout(() => done.style.opacity = 1, d * 1000);
+  });
+}
+
+function renderM3() {
+  const sc = [...S.results.scalability].sort((a, b) => a.records - b.records);
+  const xs = sc.map(r => r.records), xl = xs.map(v => fmtInt(v / 1000) + "k");
+  $("#m3charts").innerHTML = [
+    lineChart({xs, xLabels: xl, log: true, title: "Processing time vs size", yTitle: "ms · log", yFmt: v => v >= 1 ? fmt(v, 0) : v.toPrecision(1),
+      series: [{name: "Row-by-row", color: "#A78BFA", ys: sc.map(r => r.row_median_ms), tip: fmtMs}, {name: "Vectorized", color: "#22D3EE", ys: sc.map(r => r.vector_median_ms), tip: fmtMs}]}),
+    lineChart({xs, xLabels: xl, log: true, title: "Throughput vs size", yTitle: "records/s · log", yFmt: v => v >= 1e6 ? fmt(v / 1e6, 0) + "M" : fmt(v / 1e3, 0) + "k",
+      series: [{name: "Row-by-row", color: "#A78BFA", ys: sc.map(r => r.row_throughput), tip: fmtRate}, {name: "Vectorized", color: "#22D3EE", ys: sc.map(r => r.vector_throughput), tip: fmtRate}]}),
+    lineChart({xs, xLabels: xl, zero: true, title: "Speedup vs size", yTitle: "× faster", yFmt: v => fmt(v, 0) + "×",
+      series: [{name: "Speedup", color: "#3B82F6", ys: sc.map(r => r.speedup), labels: sc.map(r => fmt(r.speedup, 1) + "×"), tip: v => fmt(v, 1) + "×"}]}),
+  ].map(svg => `<div class="panel" style="padding:12px">${svg}</div>`).join("");
+  $("#m3table").innerHTML = `<tr><th>Records</th><th>A · row-by-row</th><th>B · vectorized</th><th>Speedup</th><th>A throughput</th><th>B throughput</th><th>A ns/record</th><th>B ns/record</th><th>Correct</th></tr>` +
+    sc.map(r => `<tr><td>${fmtInt(r.records)}</td><td>${fmtMs(r.row_median_ms)}</td><td>${fmtMs(r.vector_median_ms)}</td><td><b>${fmt(r.speedup, 1)}×</b></td><td>${fmtRate(r.row_throughput)}</td><td>${fmtRate(r.vector_throughput)}</td><td>${fmt(r.row_median_ms * 1e6 / r.records, 1)}</td><td>${fmt(r.vector_median_ms * 1e6 / r.records, 2)}</td><td><span class="tag ${r.correctness?.passed ? "ok" : "bad"}">${r.correctness?.passed ? "PASS" : "FAIL"}</span></td></tr>`).join("");
+  renderSim();
+  renderQuestions(3, "#m3q");
+}
+function renderSim() {
+  const rows = +$("#nightly").value, s = simulate(rows);
+  $("#m3sim").innerHTML = [
+    ["Illustrative baseline", fmtSec(s.row), "linear extrapolation"],
+    ["Illustrative optimized", fmtSec(s.vec), "linear extrapolation"],
+    ["Illustrative time saved", fmtSec(s.row - s.vec), "compute step only"],
+  ].map(([l, v, sub]) => `<div class="kpi" style="--acc:var(--warn);border-style:dashed"><div class="l">${l} <span class="tag hypo">EST.</span></div><div class="v">${esc(v)}</div><div class="s">${sub}</div></div>`).join("");
+  const rA = s.by.map(x => x.row), rB = s.by.map(x => x.vec);
+  $("#m3range").innerHTML = `<b>Extrapolating from different measured sizes gives different answers:</b> baseline ${fmtSec(Math.min(...rA))}–${fmtSec(Math.max(...rA))}, optimized ${fmtSec(Math.min(...rB))}–${fmtSec(Math.max(...rB))} for ${fmtInt(rows)} rows. That spread is itself evidence that a production-scale test is needed. A speedup seen on 100k rows will not automatically hold at ${fmtInt(rows)}.`;
+}
+
+function renderM4() { renderQuestions(4, "#m4q"); }
+
+/* ---------------------------------------------------------------- mission 05 */
+function rubric() {
+  const r = S.rec, b = S.results?.benchmark, items = [];
+  const solPts = r.solution === "validated" ? 5 : r.solution === "immediate" ? 2 : r.solution === "reject" ? (b && !b.correctness.passed ? 5 : 0) : 0;
+  items.push(["Solution consistent with the evidence", solPts, 5]);
+  const riskPts = (r.risks.length ? 2 : 0) + (r.risk.trim().length >= 25 ? 3 : r.risk.trim().length >= 10 ? 1 : 0);
+  items.push(["Operational risk identified & explained", riskPts, 5]);
+  const testPts = (r.testType ? 2 : 0) + (r.test.trim().length >= 25 ? 3 : r.test.trim().length >= 10 ? 1 : 0);
+  items.push(["Concrete next validation test", testPts, 5]);
+  const f = r.final.trim(); const finPts = (f.length >= 40 ? 3 : f.length >= 15 ? 1 : 0) + (/\d/.test(f) ? 2 : 0);
+  items.push(["Recommendation cites measured evidence", finPts, 5]);
+  return items;
+}
+function renderRubric() {
+  $("#rubric").innerHTML = rubric().map(([l, p, m]) => `<div><span>${l}</span><b style="color:${p === m ? "var(--ok)" : p ? "var(--warn)" : "var(--muted)"}">${p} / ${m}</b></div>`).join("") +
+    `<div style="color:var(--muted)"><span>Tip: name a specific risk, a measurable test and at least one number from your evidence.</span></div>`;
+}
+function renderM5() {
+  const b = S.results.benchmark;
+  $("#m5evidence").innerHTML = [
+    ["Baseline performance", fmtMs(b.row_median_ms), `${fmtRate(b.row_throughput)} · row-by-row`],
+    ["Optimized performance", fmtMs(b.vector_median_ms), `${fmtRate(b.vector_throughput)} · vectorized`],
+    ["Measured improvement", `${fmt(b.speedup, 1)}× · ${fmt(b.time_reduction_pct, 1)}%`, `${fmtInt(b.records)} records, median of ${b.repeats}`],
+    ["Correctness evidence", b.correctness.passed ? "PASS" : "FAIL", `np.allclose rtol ${b.correctness.rtol}, atol ${b.correctness.atol}`],
+  ].map(([l, v, s]) => `<div class="kpi" style="--acc:var(--cyan)"><div class="l">${l}</div><div class="v" style="font-size:19px">${esc(v)}</div><div class="s">${esc(s)}</div></div>`).join("");
+  $("#fRisks").innerHTML = RISK_TAGS.map(t => `<label><input type="checkbox" value="${esc(t)}" ${S.rec.risks.includes(t) ? "checked" : ""}>${esc(t)}</label>`).join("");
+  $("#fSol").value = S.rec.solution; $("#fTestType").value = S.rec.testType;
+  $("#fRisk").value = S.rec.risk; $("#fTest").value = S.rec.test; $("#fFinal").value = S.rec.final;
+  $("#fRisks").querySelectorAll("input").forEach(i => i.addEventListener("change", readForm));
+  renderRubric();
+  if (S.summary) showSummary();
+}
+function readForm() {
+  S.rec.solution = $("#fSol").value; S.rec.testType = $("#fTestType").value;
+  S.rec.risk = $("#fRisk").value; S.rec.test = $("#fTest").value; S.rec.final = $("#fFinal").value;
+  S.rec.risks = [...$("#fRisks").querySelectorAll("input:checked")].map(i => i.value);
+  save(); renderRubric(); updateChrome();
+}
+const SOL_TEXT = {validated: "Adopt the vectorized method after production-scale validation", immediate: "Deploy the vectorized method immediately", reject: "Keep the row-by-row method"};
+const sentence = t => { t = (t || "").trim(); return !t ? "" : /[.!?]$/.test(t) ? t : t + "."; };
+function buildSummary() {
+  const b = S.results.benchmark, r = S.rec, s = simulate(12e6);
+  return `<p><b>Finding.</b> On ${fmtInt(b.records)} synthetic telecom transactions, the vectorized method applied the 5% discount in ${fmtMs(b.vector_median_ms)} versus ${fmtMs(b.row_median_ms)} for row-by-row processing (median of ${b.repeats} timed runs) — a <b>${fmt(b.speedup, 1)}× speedup</b> and <b>${fmt(b.time_reduction_pct, 1)}% time reduction</b>, raising throughput from ${fmtRate(b.row_throughput)} to ${fmtRate(b.vector_throughput)} records per second.</p>
+<p><b>Evidence.</b> Both methods produced numerically equivalent results (np.allclose ${b.correctness.passed ? "PASS" : "FAIL"}, maximum difference ${fin(b.correctness.max_abs_diff) ? b.correctness.max_abs_diff.toExponential(1) : "n/a"}). Benchmarks at ${(S.results.scalability || []).map(x => fmtInt(x.records / 1000) + "k").join(", ")} records showed speedups of ${(S.results.scalability || []).map(x => fmt(x.speedup, 1) + "×").join(", ")}, confirming the advantage is real but size-dependent.</p>
+<p><b>Recommendation.</b> ${esc(SOL_TEXT[r.solution] || "")}. ${esc(sentence(r.final))}</p>
+<p><b>Operational risk.</b> ${esc(r.risks.join("; "))}${r.risks.length ? ". " : ""}${esc(sentence(r.risk))}</p>
+<p><b>Next validation test.</b> ${esc(r.testType)}${r.testType ? ": " : ""}${esc(sentence(r.test))}</p>
+<p><b>Limitation.</b> Timings cover the computation only, on one training runtime. A 12M-row linear estimate (${fmtSec(s.row)} → ${fmtSec(s.vec)}) is hypothetical and excludes I/O, memory pressure and concurrency.</p>`;
+}
+function generate() {
+  readForm();
+  const r = S.rec, miss = [];
+  if (!r.solution) miss.push("selected solution");
+  if (!r.testType) miss.push("validation test type");
+  if (r.risk.trim().length < 10 && !r.risks.length) miss.push("operational risk");
+  if (r.test.trim().length < 10) miss.push("validation test details");
+  if (r.final.trim().length < 15) miss.push("final recommendation");
+  if (miss.length) { $("#genMsg").innerHTML = `<span style="color:var(--warn)">Please complete: ${miss.join(", ")}.</span>`; return; }
+  $("#genMsg").textContent = "";
+  S.summary = buildSummary(); S.summaryAt = new Date().toISOString(); save(); showSummary(); refresh();
+  $("#sumPanel").scrollIntoView({behavior: "smooth", block: "start"});
+}
+function showSummary() { $("#sumPanel").hidden = false; $("#sumText").innerHTML = S.summary; }
+
+/* ---------------------------------------------------------------- scoring & progress */
+function scoreBreakdown() {
+  const Q = questions(), pts = m => QBY(m).reduce((t, id) => t + (S.answers[id]?.points || 0), 0);
+  const max = m => QBY(m).reduce((t, id) => t + Q[id].pts, 0);
+  const evid = S.integrity?.passed ? 5 : 0;
+  const recPts = S.summary ? rubric().reduce((t, [, p]) => t + p, 0) : 0;
+  return [
+    ["Evidence integrity (valid, untampered results)", evid, 5],
+    ["Mission 01 · Data understanding", pts(1), max(1)],
+    ["Mission 02 · Interpreting the experiment", pts(2), max(2)],
+    ["Mission 03 · Scalability reasoning", pts(3), max(3)],
+    ["Mission 04 · Executive decisions", pts(4), max(4)],
+    ["Mission 05 · Recommendation quality", recPts, 20],
+  ];
+}
+const totalScore = () => Math.round(scoreBreakdown().reduce((t, [, p]) => t + p, 0));
+const level = s => s >= 85 ? "Optimization Advisor" : s >= 60 ? "Performance Specialist" : "Analyst";
+function missionDone(m) {
+  if (!S.results) return false;
+  if (m === 0) return true;
+  if (m === 5) return !!S.summary;
+  return QBY(m).every(id => S.answers[id]?.resolved);
+}
+function unlocked(m) { for (let i = 0; i < m; i++) if (!missionDone(i)) return false; return true; }
+
+function updateChrome() {
+  $("#whoName").textContent = S.participant.name || "Not connected";
+  $("#srcName").textContent = S.results ? `Measured · ${S.fileName}` : "No results imported";
+  const sc = totalScore(), C = 2 * Math.PI * 19;
+  $("#ringArc").setAttribute("stroke-dasharray", `${sc / 100 * C} ${C}`); $("#ringTxt").textContent = sc;
+  $("#lvlName").textContent = level(sc);
+  const done = [1, 2, 3, 4, 5].filter(missionDone).length;
+  $("#progBar").style.width = done / 5 * 100 + "%"; $("#progTxt").textContent = `${done} of 5 missions complete`;
+  $("#steps").innerHTML = MISSIONS.map((m, i) => `<button class="step ${i === S.current ? "on" : ""} ${missionDone(i) ? "done" : ""}" data-go="${i}" ${unlocked(i) ? "" : "disabled"}>
+    <span class="n">${missionDone(i) ? icon("check") : unlocked(i) ? m.n : icon("lock")}</span><span class="t">${m.t}<small>${m.s}</small></span></button>`).join("");
+  $("#steps").querySelectorAll(".step").forEach(b => b.addEventListener("click", () => go(+b.dataset.go)));
+  for (let i = 0; i <= 4; i++) {
+    const btn = $("#go" + (i + 1)); if (btn) btn.disabled = !missionDone(i);
+    const st = $("#st" + i);
+    if (st) { const ids = QBY(i); st.textContent = i === 0 ? (S.results ? "Results connected." : "Import your results to continue.") : `${ids.filter(id => S.answers[id]?.resolved).length} of ${ids.length} checks complete`; }
+  }
+  if (S.summary) {
+    $("#finalPanel").hidden = false; $("#finalScore").textContent = sc + " / 100"; $("#finalLevel").textContent = level(sc);
+    $("#finalNext").textContent = sc >= 85 ? "Top level reached." : `${(sc >= 60 ? 85 : 60) - sc} more points to reach ${sc >= 60 ? "Optimization Advisor" : "Performance Specialist"}.`;
+    $("#breakdown").innerHTML = scoreBreakdown().map(([l, p, m]) => `<div><span>${l}</span><b>${fmt(p, p % 1 ? 1 : 0)} / ${m}</b></div>`).join("");
+  }
+}
+function go(m) {
+  if (!unlocked(m)) return;
+  S.current = m; save();
+  document.querySelectorAll("section.mission").forEach(s => s.classList.toggle("on", +s.dataset.m === m));
+  updateChrome();
+  if (S.results) ({1: renderM1, 2: renderM2, 3: renderM3, 4: renderM4, 5: renderM5}[m] || (() => {}))();
+  window.scrollTo({top: 0, behavior: "smooth"});
+}
+function refresh() {
+  $("#pName").value = S.participant.name; $("#pTeam").value = S.participant.team;
+  const ip = $("#integrityPanel");
+  if (S.integrity) {
+    ip.hidden = false;
+    $("#integrityList").innerHTML = S.integrity.checks.map(c => `<div class="check">${icon(c.ok ? "check" : "x")}<span>${esc(c.label)}</span><span class="r">${esc(c.detail)}</span><span class="tag ${c.ok ? "ok" : "bad"}">${c.ok ? "PASS" : "FAIL"}</span></div>`).join("");
+  } else ip.hidden = true;
+  if (!unlocked(S.current)) S.current = 0;
+  const m = S.current;
+  document.querySelectorAll("section.mission").forEach(s => s.classList.toggle("on", +s.dataset.m === m));
+  updateChrome();
+  if (S.results && m > 0) ({1: renderM1, 2: renderM2, 3: renderM3, 4: renderM4, 5: renderM5}[m])();
+}
+
+/* ---------------------------------------------------------------- exports */
+function download(name, text, type) {
+  const blob = new Blob([text], {type}), a = document.createElement("a");
+  a.href = URL.createObjectURL(blob); a.download = name; document.body.appendChild(a); a.click();
+  setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 500);
+}
+const slug = s => (s || "participant").toLowerCase().replace(/[^a-z0-9]+/g, "_").replace(/^_|_$/g, "") || "participant";
+function submission() {
+  const Q = questions(), sc = totalScore(), b = S.results.benchmark;
+  const answers = {}; Object.entries(Q).forEach(([id, q]) => { const a = S.answers[id] || {}; answers[id] = {mission: q.m, question: q.text, max_points: q.pts, points: a.points || 0, attempts: a.attempts || 0, resolved: !!a.resolved, revealed: !!a.revealed, correct_first_try: a.first === q.correct, first_answer: a.first != null ? "ABCDEFG"[a.first] : null, final_answer: a.final != null ? "ABCDEFG"[a.final] : null}; });
+  const dq = Q.m4a, da = S.answers.m4a;
+  return {
+    schema: SUBMISSION_SCHEMA, submitted_at: new Date().toISOString(), participant: S.participant,
+    score: {total: sc, level: level(sc), quiz_points: Object.values(answers).reduce((t, a) => t + a.points, 0), quiz_max: Object.values(Q).reduce((t, q) => t + q.pts, 0),
+      breakdown: scoreBreakdown().map(([label, points, max]) => ({label, points, max}))},
+    missions_completed: [1, 2, 3, 4, 5].filter(missionDone), completion_pct: [1, 2, 3, 4, 5].filter(missionDone).length / 5 * 100,
+    decision: {question: dq.text, first_choice: da?.first != null ? "ABC"[da.first] : null, first_choice_text: da?.first != null ? dq.opts[da.first] : null, final_choice: da?.final != null ? "ABC"[da.final] : null},
+    recommendation: {selected_solution: SOL_TEXT[S.rec.solution] || "", operational_risks: S.rec.risks, operational_risk: S.rec.risk, next_validation_test_type: S.rec.testType, next_validation_test: S.rec.test, final_recommendation: S.rec.final},
+    key_metrics: {records: b.records, baseline_ms: b.row_median_ms, optimized_ms: b.vector_median_ms, speedup_x: b.speedup, time_reduction_pct: b.time_reduction_pct, baseline_throughput: b.row_throughput, optimized_throughput: b.vector_throughput, correctness_passed: b.correctness.passed},
+    integrity: S.integrity, executive_summary: S.summary, executive_summary_text: S.summary.replace(/<[^>]+>/g, "").replace(/\s+\n/g, "\n").trim(),
+    answers, answers_state: S.answers, recommendation_state: S.rec, measurements: S.results,
+  };
+}
+function csvOf(sub) {
+  const k = sub.key_metrics, cols = {participant: sub.participant.name, team: sub.participant.team, submitted_at: sub.submitted_at, score: sub.score.total, level: sub.score.level,
+    completion_pct: sub.completion_pct, decision_first_choice: sub.decision.first_choice, records: k.records, baseline_ms: k.baseline_ms, optimized_ms: k.optimized_ms,
+    speedup_x: k.speedup_x, time_reduction_pct: k.time_reduction_pct, optimized_throughput: k.optimized_throughput, correctness: k.correctness_passed ? "PASS" : "FAIL",
+    integrity: sub.integrity?.passed ? "PASS" : "FAIL", selected_solution: sub.recommendation.selected_solution, risks: sub.recommendation.operational_risks.join("; "),
+    risk_detail: sub.recommendation.operational_risk, validation_test: sub.recommendation.next_validation_test_type + ": " + sub.recommendation.next_validation_test,
+    recommendation: sub.recommendation.final_recommendation};
+  const q = v => `"${String(v ?? "").replace(/"/g, '""')}"`;
+  return Object.keys(cols).map(q).join(",") + "\n" + Object.values(cols).map(q).join(",") + "\n";
+}
+function reportHTML(sub) {
+  const k = sub.key_metrics, sc = [...S.results.scalability].sort((a, b) => a.records - b.records), s = simulate(12e6);
+  return `<!doctype html><html lang="en"><head><meta charset="utf-8"><title>NovaTel Performance Recommendation — ${esc(sub.participant.name)}</title>
+<style>@page{size:A4;margin:14mm}body{font-family:Inter,Segoe UI,Arial,sans-serif;color:#0B1530;margin:0;font-size:11.5px;line-height:1.45}
+.hd{background:#0A1430;color:#fff;padding:14px 18px;border-radius:10px;display:flex;justify-content:space-between;align-items:center}
+.hd b{letter-spacing:4px}.hd small{color:#9FB3E0}h1{font-size:18px;margin:12px 0 2px}.meta{color:#55617F;margin-bottom:10px}
+.k{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin:10px 0}.k div{border:1px solid #D6DEF0;border-top:3px solid #3B82F6;border-radius:8px;padding:8px}
+.k span{display:block;font-size:9.5px;text-transform:uppercase;color:#55617F;letter-spacing:.6px}.k b{font-size:16px}
+table{width:100%;border-collapse:collapse;margin:6px 0 10px}th,td{border-bottom:1px solid #E1E7F5;padding:5px 6px;text-align:left}th{font-size:9.5px;text-transform:uppercase;color:#55617F}
+h2{font-size:12.5px;margin:12px 0 4px;color:#1D3A8A}.sum p{margin:4px 0}.hyp{border:1px dashed #D9A400;background:#FFF9E6;border-radius:8px;padding:6px 9px}
+.tag{font-size:9px;font-weight:800;letter-spacing:1px;padding:1px 6px;border-radius:9px;border:1px solid}.m{color:#0E7490;border-color:#0E7490}.h{color:#A16207;border-color:#A16207}
+.ft{margin-top:12px;color:#7A86A3;font-size:9.5px;border-top:1px solid #E1E7F5;padding-top:6px}@media print{.np{display:none}}</style></head><body>
+<div class="hd"><div><b>NOVATEL</b><br><small>Data Factory &amp; Digital Analytics for Enterprise · Day 3</small></div><div style="text-align:right"><b style="letter-spacing:0">Score ${sub.score.total}/100</b><br><small>${esc(sub.score.level)}</small></div></div>
+<h1>Performance Optimization — Executive Recommendation</h1>
+<div class="meta">${esc(sub.participant.name || "Participant")}${sub.participant.team ? " · " + esc(sub.participant.team) : ""} · ${new Date(sub.submitted_at).toLocaleString("en-GB")} · Measurements: ${esc(S.fileName)}</div>
+<div class="k"><div><span>Baseline (row-by-row) <i class="tag m">MEASURED</i></span><b>${fmtMs(k.baseline_ms)}</b></div><div><span>Optimized (vectorized)</span><b>${fmtMs(k.optimized_ms)}</b></div><div><span>Improvement</span><b>${fmt(k.speedup_x, 1)}× · ${fmt(k.time_reduction_pct, 1)}%</b></div><div><span>Correctness</span><b>${k.correctness_passed ? "PASS" : "FAIL"}</b></div></div>
+<h2>Executive summary</h2><div class="sum">${sub.executive_summary}</div>
+<h2>Scalability evidence <span class="tag m">MEASURED</span></h2>
+<table><tr><th>Records</th><th>Row-by-row</th><th>Vectorized</th><th>Speedup</th><th>Vectorized throughput</th></tr>${sc.map(r => `<tr><td>${fmtInt(r.records)}</td><td>${fmtMs(r.row_median_ms)}</td><td>${fmtMs(r.vector_median_ms)}</td><td>${fmt(r.speedup, 1)}×</td><td>${fmtRate(r.vector_throughput)}</td></tr>`).join("")}</table>
+<div class="hyp"><span class="tag h">HYPOTHETICAL</span> Linear estimate for 12M rows: ${fmtSec(s.row)} → ${fmtSec(s.vec)} (compute only; not a forecast).</div>
+<h2>Decision record</h2><table><tr><th>Item</th><th>Value</th></tr>
+<tr><td>Selected solution</td><td>${esc(sub.recommendation.selected_solution)}</td></tr>
+<tr><td>Operational risks</td><td>${esc(sub.recommendation.operational_risks.join("; "))}</td></tr>
+<tr><td>Next validation test</td><td>${esc(sub.recommendation.next_validation_test_type)}</td></tr>
+<tr><td>Evidence integrity</td><td>${sub.integrity?.passed ? "All recomputation checks passed" : "Some checks failed"}</td></tr>
+<tr><td>Missions completed</td><td>${sub.missions_completed.length} of 5</td></tr></table>
+<div class="ft">Timings measured with time.perf_counter() on the participant's runtime (median of ${S.results.benchmark.repeats} runs after warm-up); they cover the computation only. Environment: Python ${esc(S.results.environment?.python)}, pandas ${esc(S.results.environment?.pandas)}, NumPy ${esc(S.results.environment?.numpy)}. NovaTel is a fictional training company; data is synthetic.</div>
+<p class="np" style="text-align:center;margin-top:14px"><button onclick="window.print()" style="padding:8px 16px;border-radius:8px;border:0;background:#3B82F6;color:#fff;font-weight:700;cursor:pointer">Print / Save as PDF</button></p>
+</body></html>`;
+}
+
+/* ---------------------------------------------------------------- wiring */
+function init() {
+  load();
+  $("#pickBtn").addEventListener("click", () => $("#fileIn").click());
+  $("#fileIn").addEventListener("change", e => { readFile(e.target.files[0]); e.target.value = ""; });
+  const dz = $("#drop");
+  ["dragenter", "dragover"].forEach(ev => dz.addEventListener(ev, e => { e.preventDefault(); dz.classList.add("over"); }));
+  ["dragleave", "drop"].forEach(ev => dz.addEventListener(ev, e => { e.preventDefault(); dz.classList.remove("over"); }));
+  dz.addEventListener("drop", e => readFile(e.dataTransfer.files[0]));
+  $("#pasteBtn").addEventListener("click", () => { try { importObject(JSON.parse($("#pasteIn").value), "pasted JSON"); } catch (e) { showImportErrors(["Pasted text is not valid JSON: " + e.message]); } });
+  $("#pName").addEventListener("input", e => { S.participant.name = e.target.value; save(); updateChrome(); });
+  $("#pTeam").addEventListener("input", e => { S.participant.team = e.target.value; save(); });
+  document.querySelectorAll("[data-next]").forEach(b => b.addEventListener("click", () => go(+b.dataset.next)));
+  $("#replay").addEventListener("click", race);
+  $("#nightly").addEventListener("change", renderSim);
+  ["#fSol", "#fTestType"].forEach(s => $(s).addEventListener("change", readForm));
+  ["#fRisk", "#fTest", "#fFinal"].forEach(s => $(s).addEventListener("input", readForm));
+  $("#genBtn").addEventListener("click", generate);
+  $("#expJson").addEventListener("click", () => { download(`novatel_submission_${slug(S.participant.name)}.json`, JSON.stringify(submission(), null, 2), "application/json"); toast("Submission JSON downloaded"); });
+  $("#expCsv").addEventListener("click", () => { download(`novatel_submission_${slug(S.participant.name)}.csv`, "﻿" + csvOf(submission()), "text/csv"); toast("CSV downloaded"); });
+  $("#expHtml").addEventListener("click", () => { download(`novatel_report_${slug(S.participant.name)}.html`, reportHTML(submission()), "text/html"); toast("Report downloaded — open it and print to PDF"); });
+  $("#expPrint").addEventListener("click", () => {
+    const w = window.open("", "_blank");
+    if (!w) { toast("Pop-up blocked — use the HTML report button instead"); return; }
+    w.document.write(reportHTML(submission())); w.document.close(); setTimeout(() => w.print(), 400);
+  });
+  $("#resetBtn").addEventListener("click", () => { if (confirm("Reset the lab? This clears your imported results, answers and recommendation in this browser.")) { S = blankState(); save(); $("#importMsg").innerHTML = ""; refresh(); } });
+  if (S.results && !S.integrity) S.integrity = integrityChecks(S.results);
+  refresh();
+}
+init();
+</script>
+</body>
+</html>
